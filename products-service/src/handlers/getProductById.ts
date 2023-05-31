@@ -16,9 +16,7 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
                 message: 'Product is not found'
             })
         }
-        return buildResponse(200, {
-            product: product
-        })
+        return buildResponse(200, product)
     }catch (error: any){
         return buildResponse(500, {
             message: error.message
