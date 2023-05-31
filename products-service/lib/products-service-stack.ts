@@ -22,6 +22,12 @@ export class ProductsServiceStack extends cdk.Stack {
       entry: 'src/handlers/getProductsList.ts'
     })
 
+    const getProductById = new NodejsFunction(this, 'GetProductById', {
+      ...sharedLambdaProps,
+      functionName: 'getProductById',
+      entry: 'src/handlers/getProductById.ts'
+    })
+
     const api = new apiGateway.HttpApi(this, 'ProductApi', {
       corsPreflight: {
         allowHeaders: ['*'],
@@ -33,6 +39,12 @@ export class ProductsServiceStack extends cdk.Stack {
     api.addRoutes({
       integration: new HttpLambdaIntegration('GetProductsListIntegration', getProductsList),
       path: '/products',
+      methods: [apiGateway.HttpMethod.GET]
+    })
+
+    api.addRoutes({
+      integration: new HttpLambdaIntegration('GetProductsListIntegration', getProductById),
+      path: '/products/{id}',
       methods: [apiGateway.HttpMethod.GET]
     })
   }
