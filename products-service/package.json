@@ -12,7 +12,8 @@
     "cdk:deploy": "cdk deploy --require-approval never",
     "cdk:destroy": "cdk destroy --force",
     "cdk:bootstrap": "cdk bootstrap",
-    "cdk:synth": "cdk synth"
+    "cdk:synth": "cdk synth",
+    "fill:tables": "ts-node src/scripts/fillProductsTable.ts && ts-node src/scripts/fillStockTable.ts"
   },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.115",
@@ -33,6 +34,7 @@
     "aws-cdk-lib": "^2.78.0",
     "aws-lambda": "^1.0.7",
     "constructs": "^10.0.0",
-    "source-map-support": "^0.5.21"
+    "source-map-support": "^0.5.21",
+    "uuidv4": "^6.2.13"
   }
 }
