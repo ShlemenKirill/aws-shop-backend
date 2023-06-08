@@ -1,5 +1,6 @@
 import * as cdk from "aws-cdk-lib";
 import * as lambda from "aws-cdk-lib/aws-lambda";
+import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import * as apiGateway from "@aws-cdk/aws-apigatewayv2-alpha";
 import { Construct } from "constructs";
 import {
@@ -19,16 +20,34 @@ export class ProductsServiceStack extends cdk.Stack {
       },
     };
 
+    // Import existing DynamoDB table
+    const productsTable = dynamodb.Table.fromTableName(this, 'ProductsTable', `aws_shop_products`);
+
     const getProductsList = new NodejsFunction(this, "GetProductsList", {
       ...sharedLambdaProps,
       functionName: "getProductsList",
       entry: "src/handlers/getProductsList.ts",
+      environment: {
+        TABLE_NAME: productsTable.tableName
+      }
     });
 
     const getProductById = new NodejsFunction(this, "GetProductById", {
       ...sharedLambdaProps,
       functionName: "getProductById",
       entry: "src/handlers/getProductById.ts",
+      environment: {
+        TABLE_NAME: productsTable.tableName
+      }
+    });
+
+    const createProduct = new NodejsFunction(this, "CreateProduct", {
+      ...sharedLambdaProps,
+      functionName: "createProduct",
+      entry: "src/handlers/createProduct.ts",
+      environment: {
+        TABLE_NAME: productsTable.tableName
+      }
     });
 
     const api = new apiGateway.HttpApi(this, "ProductApi", {
@@ -55,6 +74,15 @@ export class ProductsServiceStack extends cdk.Stack {
       ),
       path: "/products/{id}",
       methods: [apiGateway.HttpMethod.GET],
+    });
+
+    api.addRoutes({
+      integration: new HttpLambdaIntegration(
+          "GetProductsListIntegration",
+          createProduct
+      ),
+      path: "/products",
+      methods: [apiGateway.HttpMethod.POST],
     });
   }
 }
