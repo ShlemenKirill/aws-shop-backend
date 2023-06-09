@@ -49,12 +49,23 @@ export const getStockItems = async (): Promise<Stock[]> => {
     }
 };
 
-export const putProducts = async (newProduct: Product) => {
+export const createProduct = async (newProduct: ProductWithCount) => {
     const client = await pool.connect();
     try {
-        const query = `INSERT INTO ${PRODUCTS_TABLE_NAME} (id, title, description, price) VALUES ($1, $2, $3, $4)`;
-        const values = [newProduct.id, newProduct.title, newProduct.description, newProduct.price];
-        await client.query(query, values);
+        await client.query('BEGIN'); // Start the transaction
+
+        const createProductQuery = `INSERT INTO ${PRODUCTS_TABLE_NAME} (id, title, description, price) VALUES ($1, $2, $3, $4)`;
+        const productValues = [newProduct.id, newProduct.title, newProduct.description, newProduct.price];
+        await client.query(createProductQuery, productValues);
+
+        const createStockQuery = `INSERT INTO ${STOCK_TABLE_NAME} (product_id, count) VALUES ($1, $2)`;
+        const stockValues = [newProduct.id, newProduct.count];
+        await client.query(createStockQuery, stockValues);
+
+        await client.query('COMMIT'); // Commit the transaction
+    } catch (error) {
+        await client.query('ROLLBACK'); // Rollback the transaction in case of an error
+        throw error;
     } finally {
         client.release();
     }

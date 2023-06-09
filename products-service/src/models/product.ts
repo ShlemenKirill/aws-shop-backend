@@ -9,4 +9,4 @@ export interface ProductWithCount extends Product {
   count: number
 }
 
-export type PostNewProductDto = Omit<Product, 'id'>
+export type PostNewProductDto = Omit<ProductWithCount, 'id'>

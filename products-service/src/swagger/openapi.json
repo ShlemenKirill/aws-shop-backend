@@ -166,6 +166,9 @@
           },
           "price": {
             "type": "number"
+          },
+          "count": {
+            "type": "number"
           }
         }
       },
