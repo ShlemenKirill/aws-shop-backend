@@ -10,8 +10,8 @@ export const handler = async (
     try {
         if(event?.body) {
             const { title, description, price} = JSON.parse(event.body) as PostNewProductDto;
-            if(!title) {
-                return buildResponse(500, 'Title is required');
+            if(!title || !description || isNaN(Number(price))) {
+                return buildResponse(400, 'Invalid parameters');
             }
             const product: Product = {
                 id: uuid(),
