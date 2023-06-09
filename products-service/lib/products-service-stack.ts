@@ -1,3 +1,4 @@
+import 'dotenv/config'
 import * as cdk from "aws-cdk-lib";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
@@ -22,7 +23,7 @@ export class ProductsServiceStack extends cdk.Stack {
     const sharedLambdaProps: Partial<NodejsFunctionProps> = {
       runtime: lambda.Runtime.NODEJS_18_X,
       environment: {
-        PRODUCT_AWS_REGION: process.env.PRODUCT_AWS_REGION!,
+        PRODUCT_AWS_REGION: process.env.PRODUCT_AWS_REGION!
       },
     };
 
@@ -34,7 +35,11 @@ export class ProductsServiceStack extends cdk.Stack {
       functionName: "getProductsList",
       entry: "src/handlers/getProductsList.ts",
       environment: {
-        TABLE_NAME: productsTable.tableName
+        TABLE_NAME: productsTable.tableName,
+        DB_USER: process.env.DB_USER!,
+        DB_HOST: process.env.DB_HOST!,
+        DB_NAME: process.env.DB_NAME!,
+        DB_PASSWORD: process.env.DB_PASSWORD!
       }
     });
 
@@ -43,7 +48,11 @@ export class ProductsServiceStack extends cdk.Stack {
       functionName: "getProductById",
       entry: "src/handlers/getProductById.ts",
       environment: {
-        TABLE_NAME: productsTable.tableName
+        TABLE_NAME: productsTable.tableName,
+        DB_USER: process.env.DB_USER!,
+        DB_HOST: process.env.DB_HOST!,
+        DB_NAME: process.env.DB_NAME!,
+        DB_PASSWORD: process.env.DB_PASSWORD!
       }
     });
 
@@ -52,7 +61,11 @@ export class ProductsServiceStack extends cdk.Stack {
       functionName: "createProduct",
       entry: "src/handlers/createProduct.ts",
       environment: {
-        TABLE_NAME: productsTable.tableName
+        TABLE_NAME: productsTable.tableName,
+        DB_USER: process.env.DB_USER!,
+        DB_HOST: process.env.DB_HOST!,
+        DB_NAME: process.env.DB_NAME!,
+        DB_PASSWORD: process.env.DB_PASSWORD!
       }
     });
 

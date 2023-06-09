@@ -1,10 +1,11 @@
 import { buildResponse } from "../utils/utils";
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
-import { getProductById } from '../services/dynamoDB.service'
+import { getProductById } from '../services/database.service'
 
 export const handler = async (
   event: APIGatewayProxyEvent
 ): Promise<APIGatewayProxyResult> => {
+  console.log('Get product:', event)
   try {
     const productId = event.pathParameters?.id;
     if (!productId) {

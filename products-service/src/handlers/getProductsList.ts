@@ -1,20 +1,12 @@
 import { buildResponse } from "../utils/utils";
-import {getAllProducts, getStockItems} from "../services/dynamoDB.service";
-import {ProductWithCount} from "../models/product";
+import { getAllProducts } from "../services/database.service";
 
 export const handler = async () => {
+  console.log('Get products')
   try {
     const productsList = await getAllProducts();
-    const stockItems = await getStockItems();
-    if(productsList && stockItems) {
-      const joinedResponse: ProductWithCount[] = productsList.map((product) => {
-        const stockItem = stockItems.find((stockItem) => stockItem.product_id === product.id)
-        return {
-            ...product,
-          count: stockItem?.count ?? 0
-        }
-      })
-      return buildResponse(200, joinedResponse);
+    if(productsList) {
+      return buildResponse(200, productsList);
     }
     return []
   } catch (error: any) {

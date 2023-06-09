@@ -1,12 +1,13 @@
 import { buildResponse } from "../utils/utils";
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { v4 as uuid } from 'uuid';
-import {putProducts} from '../services/dynamoDB.service'
+import {putProducts} from '../services/database.service'
 import {PostNewProductDto, Product} from "../models/product";
 
 export const handler = async (
     event: APIGatewayProxyEvent
 ): Promise<APIGatewayProxyResult> => {
+    console.log('Create a new product:', event)
     try {
         if(event?.body) {
             const { title, description, price} = JSON.parse(event.body) as PostNewProductDto;
