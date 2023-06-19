@@ -1,9 +1,14 @@
 import { buildResponse } from "../utils/utils";
-import { products } from "../mocks/products";
+import { getAllProducts } from "../services/database.service";
 
 export const handler = async () => {
+  console.log('Get products')
   try {
-    return buildResponse(200, products);
+    const productsList = await getAllProducts();
+    if(productsList) {
+      return buildResponse(200, productsList);
+    }
+    return []
   } catch (error: any) {
     return buildResponse(500, {
       message: error.message,
