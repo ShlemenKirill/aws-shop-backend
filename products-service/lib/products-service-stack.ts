@@ -1,7 +1,6 @@
 import "dotenv/config";
 import * as cdk from "aws-cdk-lib";
 import * as sqs from "aws-cdk-lib/aws-sqs";
-import * as lambdaEventSources from "aws-cdk-lib/aws-lambda-event-sources";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as dynamodb from "aws-cdk-lib/aws-dynamodb";
 import * as apiGateway from "@aws-cdk/aws-apigatewayv2-alpha";
@@ -18,10 +17,38 @@ import * as s3deploy from "aws-cdk-lib/aws-s3-deployment";
 import * as cloudfront from "aws-cdk-lib/aws-cloudfront";
 import { BlockPublicAccess } from "@aws-cdk/aws-s3";
 import { SqsEventSource } from "aws-cdk-lib/aws-lambda-event-sources";
+import * as sns from "aws-cdk-lib/aws-sns";
+import * as subscriptions from "aws-cdk-lib/aws-sns-subscriptions";
+import { config as dotenvConfig } from "dotenv";
+dotenvConfig();
 
 export class ProductsServiceStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
+
+    // Create SNS topic
+    const createProductTopic = new sns.Topic(this, "CreateProductTopic");
+
+    // Create email subscription for the SNS topic with filter policy
+    createProductTopic.addSubscription(
+      new subscriptions.EmailSubscription(process.env.EMAIL_ADDRESS!, {
+        filterPolicy: {
+          price: sns.SubscriptionFilter.numericFilter({
+            lessThanOrEqualTo: 500,
+          }),
+        },
+      })
+    );
+
+    createProductTopic.addSubscription(
+      new subscriptions.EmailSubscription(process.env.SECOND_EMAIL_ADDRESS!, {
+        filterPolicy: {
+          price: sns.SubscriptionFilter.numericFilter({
+            greaterThan: 500,
+          }),
+        },
+      })
+    );
 
     const sharedLambdaProps: Partial<NodejsFunctionProps> = {
       runtime: lambda.Runtime.NODEJS_18_X,
@@ -192,5 +219,18 @@ export class ProductsServiceStack extends cdk.Stack {
     // Grant necessary permissions
     queue.grantSendMessages(catalogBatchProcess);
     queue.grantConsumeMessages(catalogBatchProcess);
+    createProductTopic.grantPublish(catalogBatchProcess);
+
+    // Publish event to SNS topic after creating products
+    catalogBatchProcess.addEnvironment(
+      "SNS_TOPIC_ARN",
+      createProductTopic.topicArn
+    );
+    // Publish event to SNS topic after creating products
+    const snsPublishPermission = new aws_iam.PolicyStatement({
+      actions: ["sns:Publish"],
+      resources: [createProductTopic.topicArn],
+    });
+    catalogBatchProcess.addToRolePolicy(snsPublishPermission);
   }
 }

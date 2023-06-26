@@ -3,6 +3,12 @@ import { createProduct } from "../services/database.service";
 import { PostNewProductDto, ProductWithCount } from "../models/product";
 import { buildResponse } from "../utils/utils";
 import { v4 as uuid } from "uuid";
+import {
+  SNSClient,
+  PublishCommand,
+  PublishCommandInput,
+} from "@aws-sdk/client-sns";
+const sns = new SNSClient({ region: "eu-central-1" });
 
 export const handler = async (event: SQSEvent) => {
   try {
@@ -30,8 +36,21 @@ export const handler = async (event: SQSEvent) => {
         count,
       };
       products.push(product);
-      // Create the product in the DynamoDB table
+
+      const snsParams: PublishCommandInput = {
+        Subject: "New created product",
+        Message: `A new product was created: ${JSON.stringify(product)}`,
+        TopicArn: process.env.SNS_TOPIC_ARN,
+        MessageAttributes: {
+          price: {
+            DataType: "Number",
+            StringValue: product?.count ? product?.count.toString() : "0",
+          },
+        },
+      };
       await createProduct(product);
+      const result = await sns.send(new PublishCommand(snsParams));
+      console.log("Message published to SNS:", result.MessageId);
     }
     return buildResponse(200, products);
   } catch (error: any) {
