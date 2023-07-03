@@ -8,8 +8,14 @@ import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as s3 from "aws-cdk-lib/aws-s3";
 import * as apiGateway from "@aws-cdk/aws-apigatewayv2-alpha";
 import { HttpLambdaIntegration } from "@aws-cdk/aws-apigatewayv2-integrations-alpha";
+import {
+  HttpLambdaAuthorizer,
+  HttpLambdaResponseType,
+} from "@aws-cdk/aws-apigatewayv2-authorizers-alpha";
 import * as s3notificaitions from "aws-cdk-lib/aws-s3-notifications";
 import * as sqs from "aws-cdk-lib/aws-sqs";
+import { config as dotenvConfig } from "dotenv";
+dotenvConfig();
 
 export class ImportServiceStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -79,6 +85,18 @@ export class ImportServiceStack extends cdk.Stack {
       },
     });
 
+    const basicAuthorizerARN = process.env.AUTHORIZER_ARN!;
+    // Reference the existing Lambda function
+    const basicAuthorizer = lambda.Function.fromFunctionArn(
+      this,
+      "BasicAuthorizer",
+      process.env.AUTHORIZER_ARN!
+    );
+
+    const authorizer = new HttpLambdaAuthorizer("Authorizer", basicAuthorizer, {
+      responseTypes: [HttpLambdaResponseType.SIMPLE],
+    });
+
     // Create the Lambda integration
     api.addRoutes({
       integration: new HttpLambdaIntegration(
@@ -87,6 +105,7 @@ export class ImportServiceStack extends cdk.Stack {
       ),
       path: "/import",
       methods: [apiGateway.HttpMethod.GET],
+      authorizer,
     });
 
     bucket.addEventNotification(
